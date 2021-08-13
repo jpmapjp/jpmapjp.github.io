@@ -1,4 +1,8 @@
-# jpmapjp.github.io
+# <https://jpmapjp.github.io/>
+
+## articles
+
+* <https://jpmapjp.github.io/articles/20210813-latitude.html>
 
 ## geolonia
 
