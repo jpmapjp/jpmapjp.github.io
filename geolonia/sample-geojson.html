@@ -5,59 +5,62 @@
 <title>geolonia sample</title>
 <style>
   body, html{ width: 100%; height: 100%; margin: 0; padding: 0; }
-  .geolonia { width: 100%; height: 100%; }
-  #custom-marker { width: 50px; height: 50px; cursor: pointer; display: none; }
-  #custom-marker img { max-width: 100%; height: auto; }
+  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  .mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
 </style>
 </head>
 <body>
-  <div id="custom-marker"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Ctext%20x='0'%20y='20'%3E😊%3C/text%3E%3C/svg%3E" /></div>
-  <div
-    class="geolonia"
-    data-geojson="#example-geojson"
-    data-cluster-color="#ffcc22"
-  ></div>
+  <div id="map"></div>
 <script type="text/javascript" src="https://cdn.geolonia.com/v1/embed?geolonia-api-key=YOUR-API-KEY"></script>
-<script id="example-geojson" type="application/json">
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "title": "sample",
-        "description": "sample desc.",
-        "marker-color": "#ff2600",
-        "marker-size": "medium",
-        "marker-symbol": ""
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7,
-          35.67
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "title": "sample2",
-        "description": "sample2 desc.",
-        "marker-color": "#ff2600",
-        "marker-size": "medium",
-        "marker-symbol": ""
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8,
-          35.76
-        ]
-      }
+<script type="text/javascript">
+const map = new geolonia.Map('#map')
+map.on('load', ()=>{
+  window.fetch('https://raw.githubusercontent.com/sandstrom/country-bounding-boxes/master/bounding-boxes.json')
+  .then(r=>r.json())
+  .then(j=>{
+    return {
+      "type": "FeatureCollection",
+      "features": Object.keys(j).map(k=>{
+        const p = j[k][1]
+        const [x0, x1, y0, y1] = [Math.min(p[0], p[2]), Math.max(p[0],p[2]), Math.min(p[1],p[3]), Math.max(p[1],p[3])]
+        return {
+          "type": "Feature",
+          "properties": {
+            "title": k,
+            "description": j[k][0]
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0] ]]
+          }
+        }
+      })
     }
-  ]
-}
+  })
+  .then(g=>{
+    map.addSource("bbox", {"type": "geojson", "data": g})
+    map.addLayer({
+      "id": "bbox-fill",
+      "type": "fill",
+      "source": "bbox",
+      "paint": {
+        "fill-color": "#111",
+        "fill-opacity": 0.2
+      }
+    })
+  })
+  .catch(e=>{
+    console.error(e)
+  })
+  map.on("click", "bbox-fill", e=>{
+    new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(e.features[0].properties.description)
+    .addTo(map)
+  })
+  map.on('mouseenter', 'bbox-fill', () => { map.getCanvas().style.cursor = 'pointer' })
+  map.on('mouseleave', 'bbox-fill', () => { map.getCanvas().style.cursor = '' })
+})
 </script>
 </body>
 </html>
