@@ -8,3 +8,4 @@
 
 * <https://jpmapjp.github.io/geolonia/sample.html>
 
+* <https://jpmapjp.github.io/geolonia/sample-geojson.html>
